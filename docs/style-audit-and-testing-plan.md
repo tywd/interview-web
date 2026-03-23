@@ -9,6 +9,8 @@
 - 在 [`components/AppHeader.vue`](../components/AppHeader.vue) 和 [`components/JourneySidebar.vue`](../components/JourneySidebar.vue) 中补充了当前导航高亮与键盘焦点态
 - 在 [`pages/journey/index.vue`](../pages/journey/index.vue) 中补充了基于可视区的阶段滚动联动高亮
 - 在 [`components/JourneySidebar.vue`](../components/JourneySidebar.vue) 中补充了移动端横向滚动导航
+- 在 [`components/PreparationWorkbench.vue`](../components/PreparationWorkbench.vue)、[`components/ApplyWorkbench.vue`](../components/ApplyWorkbench.vue)、[`components/InterviewWorkbench.vue`](../components/InterviewWorkbench.vue) 中补充了移动端吸底操作区
+- 在工作台相关组件中继续收口卡片边框、阴影、hover token
 
 目的：
 
@@ -16,6 +18,8 @@
 - 保持导航项从顶部开始排列，更符合文档型导航和阶段型导航的阅读习惯。
 - 让用户滚动查看阶段说明时能明确知道当前所处阶段。
 - 让移动端阶段导航不再纵向堆叠过长。
+- 让长表单页面在移动端更容易触达主操作按钮。
+- 降低工作台卡片样式继续漂移的风险。
 
 ---
 
@@ -193,6 +197,16 @@
 - 或至少增加自定义外观层
 
 ### 5. 页面长表单的移动端压缩还不够细
+
+当前状态：
+
+- `移动端吸底 CTA 第一版` 已完成
+
+剩余空间：
+
+- 仍可以增加分段折叠
+- 仍可以进一步缩短 textarea 默认高度
+- 仍可以为单页表单增加“已保存”弱提示和节段导航
 
 问题：
 

@@ -73,8 +73,9 @@ defineEmits<{
   line-height: 1.7;
   color: var(--text-muted);
   background: var(--card-bg);
-  border: 1px solid var(--line-soft);
+  border: 2px solid var(--border-strong);
   border-radius: 16px;
+  box-shadow: var(--shadow-card);
 }
 
 @media (max-width: 900px) {

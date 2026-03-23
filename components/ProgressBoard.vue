@@ -110,9 +110,17 @@ const handleRemove = (id: string) => {
   justify-content: space-between;
   align-items: flex-start;
   padding: 16px;
-  border-radius: 18px;
+  border-radius: var(--radius-card);
   background: var(--card-bg);
-  border: 1px solid var(--line-soft);
+  border: 2px solid var(--border-strong);
+  box-shadow: var(--shadow-card);
+  transition:
+    transform var(--transition-fast),
+    box-shadow var(--transition-fast);
+}
+
+.task-row:hover {
+  transform: var(--hover-lift);
 }
 
 .task-row__main {

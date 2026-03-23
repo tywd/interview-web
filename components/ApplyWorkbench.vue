@@ -57,6 +57,11 @@
         </ul>
       </article>
     </section>
+
+    <div class="mobile-action-bar glass-panel">
+      <NButton data-testid="apply-mobile-add" type="primary" @click="handleAdd">新增记录</NButton>
+      <NButton tag="a" href="/workspace#phase-apply">看匹配报告</NButton>
+    </div>
   </div>
 </template>
 
@@ -213,10 +218,32 @@ const handleAdd = () => {
   line-height: 1.7;
 }
 
+.mobile-action-bar {
+  position: sticky;
+  bottom: 12px;
+  z-index: 12;
+  display: none;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  padding: 12px;
+  border-radius: calc(var(--panel-radius) - 4px);
+  box-shadow: var(--shadow-nav);
+}
+
 @media (max-width: 980px) {
   .stage-hero,
   .stage-grid {
     grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 720px) {
+  .stage-actions {
+    display: none;
+  }
+
+  .mobile-action-bar {
+    display: grid;
   }
 }
 </style>

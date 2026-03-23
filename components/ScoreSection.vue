@@ -62,8 +62,16 @@ defineProps<{
 .score-item {
   padding: 18px;
   background: var(--card-bg);
-  border: 1px solid var(--line-soft);
-  border-radius: 18px;
+  border: 2px solid var(--border-strong);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
+  transition:
+    transform var(--transition-fast),
+    box-shadow var(--transition-fast);
+}
+
+.score-item:hover {
+  transform: var(--hover-lift);
 }
 
 .score-item__meta {

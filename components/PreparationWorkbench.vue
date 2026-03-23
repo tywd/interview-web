@@ -133,6 +133,15 @@
         </div>
       </article>
     </section>
+
+    <div class="mobile-action-bar glass-panel">
+      <NButton data-testid="prepare-mobile-review" type="primary" :loading="reviewPending" @click="handleReview">
+        AI 检查
+      </NButton>
+      <NButton data-testid="prepare-mobile-sync" @click="handleSyncToWorkspace">
+        同步工作台
+      </NButton>
+    </div>
   </div>
 </template>
 
@@ -446,10 +455,32 @@ const handleReset = () => {
   margin-top: 12px;
 }
 
+.mobile-action-bar {
+  position: sticky;
+  bottom: 12px;
+  z-index: 12;
+  display: none;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  padding: 12px;
+  border-radius: calc(var(--panel-radius) - 4px);
+  box-shadow: var(--shadow-nav);
+}
+
 @media (max-width: 980px) {
   .prep-hero,
   .prep-grid {
     grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 720px) {
+  .prep-actions {
+    display: none;
+  }
+
+  .mobile-action-bar {
+    display: grid;
   }
 }
 </style>

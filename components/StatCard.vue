@@ -20,6 +20,7 @@ defineProps<{
 .stat-card {
   padding: 20px;
   border-radius: calc(var(--panel-radius) - 4px);
+  box-shadow: var(--shadow-card);
 }
 
 .stat-card__header {

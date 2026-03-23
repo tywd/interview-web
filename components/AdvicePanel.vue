@@ -52,7 +52,15 @@ defineProps<{
   padding: 20px;
   border-radius: 20px;
   background: var(--card-bg);
-  border: 1px solid var(--line-soft);
+  border: 2px solid var(--border-strong);
+  box-shadow: var(--shadow-card);
+  transition:
+    transform var(--transition-fast),
+    box-shadow var(--transition-fast);
+}
+
+.advice-card:hover {
+  transform: var(--hover-lift);
 }
 
 ul {
