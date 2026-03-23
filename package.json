@@ -1,0 +1,30 @@
+{
+  "name": "ai-interview-web",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "imports": {
+    "#internal/nuxt/paths": "./internal/nuxt-paths.mjs"
+  },
+  "packageManager": "pnpm@10.8.1",
+  "scripts": {
+    "dev": "nuxt dev",
+    "build": "nuxt build",
+    "start": "node .output/server/index.mjs",
+    "preview": "nuxt preview",
+    "typecheck": "nuxt typecheck",
+    "test:e2e": "playwright test"
+  },
+  "dependencies": {
+    "naive-ui": "^2.39.0",
+    "nuxt": "^3.15.4",
+    "nuxtjs-naive-ui": "^1.0.2",
+    "vue": "^3.5.13",
+    "vue-router": "^4.5.0"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.58.2",
+    "typescript": "^5.7.3",
+    "vue-tsc": "^3.2.6"
+  }
+}

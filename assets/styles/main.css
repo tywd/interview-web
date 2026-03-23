@@ -1,0 +1,106 @@
+:root {
+  color-scheme: light;
+  --bg-main: #fff6df;
+  --bg-panel: #fff7e8;
+  --bg-gradient:
+    radial-gradient(circle at 8% 12%, rgba(255, 111, 0, 0.26), transparent 19%),
+    radial-gradient(circle at 92% 16%, rgba(0, 196, 140, 0.22), transparent 18%),
+    linear-gradient(180deg, #fff5d8 0%, #ffeec2 56%, #fff6df 100%);
+  --bg-strong: #17120d;
+  --text-main: #17120d;
+  --text-muted: #5b5249;
+  --line-soft: rgba(23, 18, 13, 0.88);
+  --accent: #ff5b2e;
+  --accent-soft: rgba(255, 91, 46, 0.18);
+  --gold: #ffd84d;
+  --card-bg: #fffdf6;
+  --card-strong-bg: #ffd84d;
+  --border-strong: rgba(23, 18, 13, 0.9);
+  --theme-shadow: 8px 8px 0 var(--border-strong);
+  --shadow-panel: 8px 8px 0 var(--border-strong);
+  --shadow-card: 4px 4px 0 var(--border-strong);
+  --panel-radius: 24px;
+  --radius-card: 18px;
+  --radius-pill: 999px;
+  --panel-blur: 0px;
+  --transition-fast: 180ms ease;
+  --hover-lift: translateY(-2px);
+  --focus-ring: 0 0 0 3px rgba(255, 91, 46, 0.22);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#__nuxt {
+  margin: 0;
+  min-height: 100%;
+  font-family: "Avenir Next", "PingFang SC", "Hiragino Sans GB", sans-serif;
+  background: var(--bg-gradient);
+  color: var(--text-main);
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+  transition:
+    color var(--transition-fast),
+    background var(--transition-fast),
+    border-color var(--transition-fast),
+    transform var(--transition-fast),
+    box-shadow var(--transition-fast);
+}
+
+button,
+input,
+textarea {
+  font: inherit;
+}
+
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+[role='button']:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+.page-shell {
+  width: min(1440px, calc(100vw - 32px));
+  margin: 0 auto;
+  padding: 24px 0 48px;
+}
+
+h1,
+h2,
+h3,
+h4,
+strong {
+  color: var(--text-main);
+}
+
+.glass-panel {
+  background: var(--bg-panel);
+  border: 1px solid var(--line-soft);
+  backdrop-filter: blur(var(--panel-blur));
+  box-shadow: var(--theme-shadow);
+}
+
+.neo-card {
+  border: 2px solid var(--border-strong);
+  border-radius: var(--radius-card);
+  background: var(--card-bg);
+  box-shadow: var(--shadow-card);
+  transition:
+    transform var(--transition-fast),
+    box-shadow var(--transition-fast),
+    border-color var(--transition-fast),
+    background var(--transition-fast);
+}
+
+.neo-card:hover {
+  transform: var(--hover-lift);
+}
