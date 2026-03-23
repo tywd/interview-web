@@ -1,6 +1,6 @@
 <template>
   <div class="journey-page">
-    <JourneySidebar :items="sidebarItems" />
+    <JourneySidebar :items="sidebarItems" :active-id="activeSectionId" />
 
     <div class="journey-page__content">
       <section class="journey-intro glass-panel">
@@ -22,6 +22,7 @@
 </template>
 
 <script setup lang="ts">
+const route = useRoute()
 const journeyItems = [
   {
     id: 'prepare',
@@ -97,7 +98,55 @@ const journeyItems = [
   },
 ] as const
 
+type JourneySectionId = (typeof journeyItems)[number]['id']
+
 const sidebarItems = journeyItems.map(({ id, step, title }) => ({ id, step, title }))
+const activeSectionId = ref<JourneySectionId>(sidebarItems[0]?.id ?? 'prepare')
+let sectionObserver: IntersectionObserver | null = null
+
+const updateFromHash = () => {
+  const hashedId = route.hash.replace('#', '') as JourneySectionId
+  if (hashedId && sidebarItems.some((item) => item.id === hashedId)) {
+    activeSectionId.value = hashedId
+  }
+}
+
+watch(() => route.hash, updateFromHash, { immediate: true })
+
+onMounted(() => {
+  updateFromHash()
+
+  const sections = sidebarItems
+    .map((item) => document.getElementById(item.id))
+    .filter((section): section is HTMLElement => Boolean(section))
+
+  if (!sections.length) {
+    return
+  }
+
+  sectionObserver = new IntersectionObserver(
+    (entries) => {
+      const visibleEntries = entries
+        .filter((entry) => entry.isIntersecting)
+        .sort((a, b) => b.intersectionRatio - a.intersectionRatio)
+
+      const topEntry = visibleEntries[0]
+      if (topEntry?.target.id) {
+        activeSectionId.value = topEntry.target.id as JourneySectionId
+      }
+    },
+    {
+      rootMargin: '-15% 0px -55% 0px',
+      threshold: [0.2, 0.4, 0.6],
+    },
+  )
+
+  sections.forEach((section) => sectionObserver?.observe(section))
+})
+
+onBeforeUnmount(() => {
+  sectionObserver?.disconnect()
+})
 </script>
 
 <style scoped>

@@ -19,6 +19,7 @@
   --theme-shadow: 8px 8px 0 var(--border-strong);
   --shadow-panel: 8px 8px 0 var(--border-strong);
   --shadow-card: 4px 4px 0 var(--border-strong);
+  --shadow-nav: 6px 6px 0 var(--border-strong);
   --panel-radius: 24px;
   --radius-card: 18px;
   --radius-pill: 999px;

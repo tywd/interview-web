@@ -45,7 +45,7 @@ const features = [
 .feature-card {
   padding: 22px;
   border-radius: calc(var(--panel-radius) + 2px);
-  box-shadow: 6px 6px 0 var(--border-strong);
+  box-shadow: var(--shadow-nav);
   transition:
     transform var(--transition-fast),
     box-shadow var(--transition-fast);

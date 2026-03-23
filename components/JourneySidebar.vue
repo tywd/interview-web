@@ -20,11 +20,16 @@ const route = useRoute()
 
 const props = defineProps<{
   items: Array<{ id: string; step: string; title: string }>
+  activeId?: string
 }>()
 
 const isActive = (id: string) => {
   if (route.path !== '/journey') {
     return false
+  }
+
+  if (props.activeId) {
+    return props.activeId === id
   }
 
   if (route.hash) {
@@ -44,7 +49,7 @@ const isActive = (id: string) => {
   gap: 10px;
   padding: 18px;
   border-radius: calc(var(--panel-radius) + 2px);
-  box-shadow: 6px 6px 0 var(--border-strong);
+  box-shadow: var(--shadow-nav);
 }
 
 .journey-sidebar p {
@@ -79,7 +84,7 @@ const isActive = (id: string) => {
 .journey-sidebar__link--active {
   background: #fff3c6;
   transform: var(--hover-lift);
-  box-shadow: 6px 6px 0 var(--border-strong), var(--focus-ring);
+  box-shadow: var(--shadow-nav), var(--focus-ring);
 }
 
 .journey-sidebar__link--active span,
@@ -102,6 +107,21 @@ const isActive = (id: string) => {
 @media (max-width: 980px) {
   .journey-sidebar {
     position: static;
+    grid-auto-flow: column;
+    grid-auto-columns: minmax(180px, 1fr);
+    align-items: stretch;
+    overflow-x: auto;
+    padding-bottom: 10px;
+    scroll-snap-type: x proximity;
+  }
+
+  .journey-sidebar p {
+    display: none;
+  }
+
+  .journey-sidebar__link {
+    min-height: 100%;
+    scroll-snap-align: start;
   }
 }
 </style>

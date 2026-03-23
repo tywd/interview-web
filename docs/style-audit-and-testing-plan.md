@@ -7,11 +7,15 @@
 - 在 [`components/JourneySidebar.vue`](../components/JourneySidebar.vue) 中为 `.journey-sidebar` 增加了 `align-content: start;`
 - 在 [`assets/styles/main.css`](../assets/styles/main.css) 中补充了边框、阴影、圆角、hover、focus 等全局设计 token
 - 在 [`components/AppHeader.vue`](../components/AppHeader.vue) 和 [`components/JourneySidebar.vue`](../components/JourneySidebar.vue) 中补充了当前导航高亮与键盘焦点态
+- 在 [`pages/journey/index.vue`](../pages/journey/index.vue) 中补充了基于可视区的阶段滚动联动高亮
+- 在 [`components/JourneySidebar.vue`](../components/JourneySidebar.vue) 中补充了移动端横向滚动导航
 
 目的：
 
 - 避免侧边栏在可用高度较大时出现内容被均匀拉开的情况。
 - 保持导航项从顶部开始排列，更符合文档型导航和阶段型导航的阅读习惯。
+- 让用户滚动查看阶段说明时能明确知道当前所处阶段。
+- 让移动端阶段导航不再纵向堆叠过长。
 
 ---
 
@@ -145,6 +149,16 @@
   - focus-visible：`outline` 或高对比边框
 
 ### 3. 侧边导航还缺“当前项”高亮
+
+当前状态：
+
+- `基础 active route` 已完成
+- `scroll spy 联动高亮` 已完成
+
+剩余空间：
+
+- 还可以继续补充滚动时的 URL hash 同步
+- 还可以补当前阶段进入视图时的轻微过渡反馈
 
 问题：
 
