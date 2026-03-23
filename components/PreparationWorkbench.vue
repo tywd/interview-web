@@ -109,6 +109,7 @@
 
         <div v-if="reviewResult" class="ai-output">
           <h3>AI 优化结果</h3>
+          <p v-if="reviewMetaText" class="ai-meta">{{ reviewMetaText }}</p>
           <p>{{ reviewResult.optimizedSelfIntro }}</p>
           <ul>
             <li v-for="item in reviewResult.resumeWarnings" :key="item">{{ item }}</li>
@@ -147,13 +148,13 @@
 
 <script setup lang="ts">
 import { NButton, NInput, useMessage } from 'naive-ui'
-import type { PreparationReviewResult } from '~/types/interview'
+import type { PreparationReviewPayload } from '~/types/interview'
 
 const message = useMessage()
 const { state, load, persist, reset } = usePreparationPlanner()
 const { state: workspaceState, updateTexts, load: loadWorkspace, persist: persistWorkspace } = useInterviewTracker()
 const reviewPending = ref(false)
-const reviewResult = ref<PreparationReviewResult | null>(null)
+const reviewResult = ref<PreparationReviewPayload | null>(null)
 
 const preparation = computed({
   get: () => state.value,
@@ -166,6 +167,16 @@ const completedCount = computed(() => preparation.value.checklist.filter((item) 
 const readinessScore = computed(() =>
   Math.round((completedCount.value / Math.max(preparation.value.checklist.length, 1)) * 100),
 )
+const reviewMetaText = computed(() => {
+  const meta = reviewResult.value?.meta
+  if (!meta) {
+    return ''
+  }
+
+  return meta.provider === 'deepseek'
+    ? '结果来源：DeepSeek'
+    : `结果来源：本地回退${meta.fallbackReason ? ` · ${meta.fallbackReason}` : ''}`
+})
 
 watch(
   preparation,
@@ -196,7 +207,7 @@ const handleReview = async () => {
   reviewPending.value = true
 
   try {
-    const result = await $fetch<PreparationReviewResult>('/api/prepare/review', {
+    const result = await $fetch<PreparationReviewPayload>('/api/prepare/review', {
       method: 'POST',
       body: {
         checklist: preparation.value.checklist,
@@ -207,7 +218,7 @@ const handleReview = async () => {
     })
 
     reviewResult.value = result
-    message.success('准备阶段检查已生成')
+    message.success(result.meta?.provider === 'deepseek' ? '准备阶段检查已生成' : '准备阶段检查已生成，当前为本地回退结果')
   } catch (error) {
     console.error(error)
     message.error('准备阶段检查失败')
@@ -448,6 +459,13 @@ const handleReset = () => {
   margin: 0;
   color: var(--text-muted);
   line-height: 1.7;
+}
+
+.ai-meta {
+  margin-bottom: 10px !important;
+  color: var(--accent) !important;
+  font-size: 13px;
+  font-weight: 800;
 }
 
 .ai-output ul + ul,

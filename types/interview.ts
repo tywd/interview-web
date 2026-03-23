@@ -83,6 +83,15 @@ export interface PreparationReviewResult {
   optimizedSelfIntro: string
 }
 
+export interface AiResultMeta {
+  provider: 'deepseek' | 'mock'
+  fallbackReason?: string
+}
+
+export interface PreparationReviewPayload extends PreparationReviewResult {
+  meta?: AiResultMeta
+}
+
 export interface MatchInsight {
   title: string
   items: string[]
@@ -98,8 +107,12 @@ export interface MatchDiagnosisResult {
   actionPlan: string[]
 }
 
+export interface MatchDiagnosisPayload extends MatchDiagnosisResult {
+  meta?: AiResultMeta
+}
+
 export interface MatchState {
-  diagnosis: MatchDiagnosisResult | null
+  diagnosis: MatchDiagnosisPayload | null
   lastDiagnosedAt: string | null
 }
 
@@ -126,11 +139,20 @@ export interface InterviewQuestionCard {
   answerOutline: string
 }
 
+export interface InterviewQuestionPackResult {
+  questionBank: InterviewQuestionCard[]
+  meta?: AiResultMeta
+}
+
 export interface InterviewReviewResult {
   summary: string
   strengths: string[]
   weaknesses: string[]
   nextActions: string[]
+}
+
+export interface InterviewReviewPayload extends InterviewReviewResult {
+  meta?: AiResultMeta
 }
 
 export interface InterviewSessionRecord {
@@ -147,5 +169,5 @@ export interface InterviewState {
   questionBank: InterviewQuestionCard[]
   lastGeneratedAt: string | null
   sessions: InterviewSessionRecord[]
-  latestReview: InterviewReviewResult | null
+  latestReview: InterviewReviewPayload | null
 }

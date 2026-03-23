@@ -19,6 +19,7 @@
           <h2>AI 面试题包</h2>
           <p>基于当前简历、JD、公司资料与准备阶段自我介绍生成。</p>
         </div>
+        <p v-if="questionPackMetaText" class="ai-meta">{{ questionPackMetaText }}</p>
         <div class="stage-actions">
           <NButton data-testid="interview-generate" type="primary" :loading="generatePending" @click="handleGenerate">
             生成题库
@@ -53,6 +54,7 @@
         </div>
 
         <div v-if="interview.latestReview" class="review-output">
+          <p v-if="reviewMetaText" class="ai-meta">{{ reviewMetaText }}</p>
           <p>{{ interview.latestReview.summary }}</p>
           <h3>优势</h3>
           <ul class="stage-list">
@@ -83,7 +85,7 @@
 
 <script setup lang="ts">
 import { NButton, NInput, useMessage } from 'naive-ui'
-import type { InterviewQuestionCard, InterviewReviewResult, InterviewSessionRecord } from '~/types/interview'
+import type { AiResultMeta, InterviewQuestionPackResult, InterviewReviewPayload, InterviewSessionRecord } from '~/types/interview'
 
 const message = useMessage()
 const { state, load, setQuestionBank, addSession, setLatestReview } = useInterviewCoach()
@@ -91,6 +93,8 @@ const { state: workspaceState, load: loadWorkspace } = useInterviewTracker()
 const { state: preparationState, load: loadPreparation } = usePreparationPlanner()
 const generatePending = ref(false)
 const reviewPending = ref(false)
+const questionPackMeta = ref<AiResultMeta | null>(null)
+const reviewMeta = ref<AiResultMeta | null>(null)
 
 const interview = computed(() => state.value)
 const workspace = computed(() => workspaceState.value)
@@ -110,6 +114,24 @@ const categoryMap = {
   behavioral: '行为题',
   business: '业务题',
 } as const
+const questionPackMetaText = computed(() => {
+  if (!questionPackMeta.value) {
+    return ''
+  }
+
+  return questionPackMeta.value.provider === 'deepseek'
+    ? '结果来源：DeepSeek'
+    : `结果来源：本地回退${questionPackMeta.value.fallbackReason ? ` · ${questionPackMeta.value.fallbackReason}` : ''}`
+})
+const reviewMetaText = computed(() => {
+  if (!reviewMeta.value) {
+    return ''
+  }
+
+  return reviewMeta.value.provider === 'deepseek'
+    ? '结果来源：DeepSeek'
+    : `结果来源：本地回退${reviewMeta.value.fallbackReason ? ` · ${reviewMeta.value.fallbackReason}` : ''}`
+})
 
 onMounted(() => {
   load()
@@ -120,7 +142,7 @@ onMounted(() => {
 const handleGenerate = async () => {
   generatePending.value = true
   try {
-    const result = await $fetch<{ questionBank: InterviewQuestionCard[] }>('/api/interview/generate', {
+    const result = await $fetch<InterviewQuestionPackResult>('/api/interview/generate', {
       method: 'POST',
       body: {
         resume: workspace.value.resumeText,
@@ -131,7 +153,8 @@ const handleGenerate = async () => {
       },
     })
     setQuestionBank(result.questionBank)
-    message.success('面试题库已生成')
+    questionPackMeta.value = result.meta ?? null
+    message.success(result.meta?.provider === 'deepseek' ? '面试题库已生成' : '面试题库已生成，当前为本地回退结果')
   } catch (error) {
     console.error(error)
     message.error('面试题库生成失败')
@@ -143,7 +166,7 @@ const handleGenerate = async () => {
 const handleReview = async () => {
   reviewPending.value = true
   try {
-    const review = await $fetch<InterviewReviewResult>('/api/interview/review', {
+    const review = await $fetch<InterviewReviewPayload>('/api/interview/review', {
       method: 'POST',
       body: {
         askedQuestions: draft.askedQuestions,
@@ -162,7 +185,8 @@ const handleReview = async () => {
     }
     addSession(session)
     setLatestReview(review)
-    message.success('面试复盘已生成')
+    reviewMeta.value = review.meta ?? null
+    message.success(review.meta?.provider === 'deepseek' ? '面试复盘已生成' : '面试复盘已生成，当前为本地回退结果')
   } catch (error) {
     console.error(error)
     message.error('面试复盘失败')
@@ -244,6 +268,13 @@ const handleReview = async () => {
   flex-wrap: wrap;
   gap: 12px;
   margin-top: 18px;
+}
+
+.ai-meta {
+  margin: 0 0 12px;
+  color: var(--accent);
+  font-size: 13px;
+  font-weight: 800;
 }
 
 .question-bank,

@@ -1,4 +1,4 @@
-import type { MatchDiagnosisResult, MatchState } from '~/types/interview'
+import type { MatchDiagnosisPayload, MatchState } from '~/types/interview'
 
 const STORAGE_KEY = 'ai-interview-match'
 
@@ -34,7 +34,7 @@ export const useMatchPlanner = () => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state.value))
   }
 
-  const setDiagnosis = (diagnosis: MatchDiagnosisResult) => {
+  const setDiagnosis = (diagnosis: MatchDiagnosisPayload) => {
     state.value.diagnosis = diagnosis
     state.value.lastDiagnosedAt = new Date().toLocaleString('zh-CN', { hour12: false })
     persist()

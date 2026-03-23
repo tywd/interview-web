@@ -19,6 +19,7 @@
           <h2>诊断输入</h2>
           <p>默认复用工作台中的简历、JD 和公司资料。</p>
         </div>
+        <p v-if="diagnosisMetaText" class="ai-meta">{{ diagnosisMetaText }}</p>
         <div class="input-preview">
           <p><strong>简历：</strong>{{ workspace.resumeText.slice(0, 100) }}...</p>
           <p><strong>JD：</strong>{{ workspace.jdText.slice(0, 100) }}...</p>
@@ -85,7 +86,7 @@
 
 <script setup lang="ts">
 import { NButton, useMessage } from 'naive-ui'
-import type { MatchDiagnosisResult } from '~/types/interview'
+import type { MatchDiagnosisPayload } from '~/types/interview'
 
 const message = useMessage()
 const { state, load, setDiagnosis } = useMatchPlanner()
@@ -95,6 +96,16 @@ const pending = ref(false)
 const workspace = computed(() => workspaceState.value)
 const diagnosis = computed(() => state.value.diagnosis)
 const fallbackKeywordGaps = computed(() => ['Vue 3', 'Nuxt', 'AI', '性能优化'].filter((item) => !workspace.value.resumeText.includes(item)))
+const diagnosisMetaText = computed(() => {
+  const meta = diagnosis.value?.meta
+  if (!meta) {
+    return ''
+  }
+
+  return meta.provider === 'deepseek'
+    ? '结果来源：DeepSeek'
+    : `结果来源：本地回退${meta.fallbackReason ? ` · ${meta.fallbackReason}` : ''}`
+})
 
 onMounted(() => {
   load()
@@ -104,7 +115,7 @@ onMounted(() => {
 const handleDiagnose = async () => {
   pending.value = true
   try {
-    const result = await $fetch<MatchDiagnosisResult>('/api/match/diagnose', {
+    const result = await $fetch<MatchDiagnosisPayload>('/api/match/diagnose', {
       method: 'POST',
       body: {
         resume: workspace.value.resumeText,
@@ -113,7 +124,7 @@ const handleDiagnose = async () => {
       },
     })
     setDiagnosis(result)
-    message.success('匹配诊断已更新')
+    message.success(result.meta?.provider === 'deepseek' ? '匹配诊断已更新' : '匹配诊断已更新，当前为本地回退结果')
   } catch (error) {
     console.error(error)
     message.error('匹配诊断失败')
@@ -207,6 +218,13 @@ const handleDiagnose = async () => {
 .input-preview p {
   margin: 0;
   line-height: 1.7;
+}
+
+.ai-meta {
+  margin: 0 0 12px;
+  color: var(--accent);
+  font-size: 13px;
+  font-weight: 800;
 }
 
 .stage-actions {

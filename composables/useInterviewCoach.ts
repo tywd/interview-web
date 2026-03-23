@@ -1,4 +1,4 @@
-import type { InterviewQuestionCard, InterviewReviewResult, InterviewSessionRecord, InterviewState } from '~/types/interview'
+import type { InterviewQuestionCard, InterviewReviewPayload, InterviewSessionRecord, InterviewState } from '~/types/interview'
 
 const STORAGE_KEY = 'ai-interview-coach'
 
@@ -56,7 +56,7 @@ export const useInterviewCoach = () => {
     persist()
   }
 
-  const setLatestReview = (review: InterviewReviewResult) => {
+  const setLatestReview = (review: InterviewReviewPayload) => {
     state.value.latestReview = review
     persist()
   }
