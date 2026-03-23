@@ -58,3 +58,37 @@ test('interview page can generate question bank and review', async ({ page }) =>
 
   await expect(page.getByRole('heading', { name: '下一步动作' })).toBeVisible()
 })
+
+test('journey page updates active sidebar item while scrolling', async ({ page }) => {
+  await page.goto('/journey')
+
+  const prepareLink = page.locator('a[href="/journey#prepare"]')
+  const interviewLink = page.locator('a[href="/journey#interview"]')
+
+  await expect(prepareLink).toHaveClass(/journey-sidebar__link--active/)
+
+  await page.evaluate(() => window.scrollTo({ top: document.body.scrollHeight, behavior: 'instant' }))
+  await expect(interviewLink).toHaveClass(/journey-sidebar__link--active/)
+})
+
+test('mobile sticky action bars are available on long-form pages', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 })
+
+  await page.goto('/journey/prepare')
+  await page.getByPlaceholder('例如：高级前端工程师 / AI 产品前端').fill('移动端测试岗位')
+  await expect(page.getByTestId('prepare-mobile-review')).toBeVisible()
+  await page.getByTestId('prepare-mobile-review').click()
+  await expect(page.getByRole('heading', { name: 'AI 优化结果' })).toBeVisible()
+  await expect(page.getByTestId('prepare-mobile-sync')).toBeVisible()
+
+  await page.goto('/journey/apply')
+  await expect(page.getByTestId('apply-mobile-add')).toBeVisible()
+  await page.getByTestId('apply-mobile-add').click()
+  await expect(page.getByPlaceholder('公司').first()).toBeVisible()
+
+  await page.goto('/journey/interview')
+  await expect(page.getByTestId('interview-mobile-generate')).toBeVisible()
+  await page.getByTestId('interview-mobile-generate').click()
+  await expect(page.getByText('AI 面试题包')).toBeVisible()
+  await expect(page.getByTestId('interview-mobile-review')).toBeVisible()
+})

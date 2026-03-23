@@ -102,7 +102,8 @@ type JourneySectionId = (typeof journeyItems)[number]['id']
 
 const sidebarItems = journeyItems.map(({ id, step, title }) => ({ id, step, title }))
 const activeSectionId = ref<JourneySectionId>(sidebarItems[0]?.id ?? 'prepare')
-let sectionObserver: IntersectionObserver | null = null
+let trackedSections: HTMLElement[] = []
+let handleViewportSync: (() => void) | null = null
 
 const updateFromHash = () => {
   const hashedId = route.hash.replace('#', '') as JourneySectionId
@@ -116,36 +117,42 @@ watch(() => route.hash, updateFromHash, { immediate: true })
 onMounted(() => {
   updateFromHash()
 
-  const sections = sidebarItems
+  trackedSections = sidebarItems
     .map((item) => document.getElementById(item.id))
     .filter((section): section is HTMLElement => Boolean(section))
 
-  if (!sections.length) {
+  if (!trackedSections.length) {
     return
   }
 
-  sectionObserver = new IntersectionObserver(
-    (entries) => {
-      const visibleEntries = entries
-        .filter((entry) => entry.isIntersecting)
-        .sort((a, b) => b.intersectionRatio - a.intersectionRatio)
+  handleViewportSync = () => {
+    const triggerLine = Math.max(140, window.innerHeight * 0.28)
+    let currentId = trackedSections[0]?.id as JourneySectionId
 
-      const topEntry = visibleEntries[0]
-      if (topEntry?.target.id) {
-        activeSectionId.value = topEntry.target.id as JourneySectionId
+    if (window.scrollY + window.innerHeight >= document.documentElement.scrollHeight - 8) {
+      activeSectionId.value = trackedSections.at(-1)?.id as JourneySectionId
+      return
+    }
+
+    for (const section of trackedSections) {
+      if (section.getBoundingClientRect().top <= triggerLine) {
+        currentId = section.id as JourneySectionId
       }
-    },
-    {
-      rootMargin: '-15% 0px -55% 0px',
-      threshold: [0.2, 0.4, 0.6],
-    },
-  )
+    }
 
-  sections.forEach((section) => sectionObserver?.observe(section))
+    activeSectionId.value = currentId
+  }
+
+  handleViewportSync()
+  window.addEventListener('scroll', handleViewportSync, { passive: true })
+  window.addEventListener('resize', handleViewportSync)
 })
 
 onBeforeUnmount(() => {
-  sectionObserver?.disconnect()
+  if (handleViewportSync) {
+    window.removeEventListener('scroll', handleViewportSync)
+    window.removeEventListener('resize', handleViewportSync)
+  }
 })
 </script>
 
