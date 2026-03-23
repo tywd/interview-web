@@ -118,6 +118,7 @@
             <li v-for="item in reviewResult.missingItems" :key="item">缺失：{{ item }}</li>
           </ul>
         </div>
+        <p v-else-if="preparationInputHint" class="input-hint">{{ preparationInputHint }}</p>
 
         <div class="prep-actions">
           <NButton @click="handleAddProject">新增项目证据</NButton>
@@ -177,6 +178,31 @@ const reviewMetaText = computed(() => {
     ? '结果来源：DeepSeek'
     : `结果来源：本地回退${meta.fallbackReason ? ` · ${meta.fallbackReason}` : ''}`
 })
+const preparationInputHint = computed(() => {
+  const notes: string[] = []
+
+  if (!preparation.value.targetRole.trim()) {
+    notes.push('补充目标岗位')
+  }
+
+  if (preparation.value.selfIntro.trim().length < 30) {
+    notes.push('把自我介绍补到至少 30 字')
+  }
+
+  const completeProjects = preparation.value.projectNotes.filter((item) =>
+    [item.title, item.situation, item.action, item.result].join('').trim().length >= 40,
+  ).length
+
+  if (completeProjects === 0) {
+    notes.push('至少补 1 个较完整的项目证据')
+  }
+
+  if (workspaceState.value.resumeText.trim().length < 80) {
+    notes.push('工作台里的简历材料还偏少')
+  }
+
+  return notes.length ? `建议先：${notes.join(' / ')}` : ''
+})
 
 watch(
   preparation,
@@ -204,6 +230,15 @@ const handleAddProject = () => {
 }
 
 const handleReview = async () => {
+  const completeProjects = preparation.value.projectNotes.filter((item) =>
+    [item.title, item.situation, item.action, item.result].join('').trim().length >= 40,
+  ).length
+
+  if (preparation.value.selfIntro.trim().length < 20 && completeProjects === 0) {
+    message.warning('先补一版自我介绍或至少 1 个较完整的项目证据，再执行 AI 检查')
+    return
+  }
+
   reviewPending.value = true
 
   try {
@@ -466,6 +501,13 @@ const handleReset = () => {
   color: var(--accent) !important;
   font-size: 13px;
   font-weight: 800;
+}
+
+.input-hint {
+  margin: 16px 0 0;
+  color: var(--text-muted);
+  font-size: 14px;
+  line-height: 1.7;
 }
 
 .ai-output ul + ul,

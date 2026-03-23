@@ -20,6 +20,7 @@
           <p>默认复用工作台中的简历、JD 和公司资料。</p>
         </div>
         <p v-if="diagnosisMetaText" class="ai-meta">{{ diagnosisMetaText }}</p>
+        <p v-else-if="inputQualityHint" class="input-hint">{{ inputQualityHint }}</p>
         <div class="input-preview">
           <p><strong>简历：</strong>{{ workspace.resumeText.slice(0, 100) }}...</p>
           <p><strong>JD：</strong>{{ workspace.jdText.slice(0, 100) }}...</p>
@@ -106,6 +107,21 @@ const diagnosisMetaText = computed(() => {
     ? '结果来源：DeepSeek'
     : `结果来源：本地回退${meta.fallbackReason ? ` · ${meta.fallbackReason}` : ''}`
 })
+const inputQualityHint = computed(() => {
+  const notes: string[] = []
+
+  if (workspace.value.resumeText.trim().length < 120) {
+    notes.push('简历至少补到 120 字')
+  }
+  if (workspace.value.jdText.trim().length < 80) {
+    notes.push('岗位 JD 至少补到 80 字')
+  }
+  if (workspace.value.companyText.trim().length < 40) {
+    notes.push('公司资料建议补到 40 字以上')
+  }
+
+  return notes.length ? `建议先：${notes.join(' / ')}` : ''
+})
 
 onMounted(() => {
   load()
@@ -113,6 +129,11 @@ onMounted(() => {
 })
 
 const handleDiagnose = async () => {
+  if (workspace.value.resumeText.trim().length < 80 || workspace.value.jdText.trim().length < 60) {
+    message.warning('先把简历和岗位 JD 补充完整，再生成匹配诊断')
+    return
+  }
+
   pending.value = true
   try {
     const result = await $fetch<MatchDiagnosisPayload>('/api/match/diagnose', {
@@ -225,6 +246,13 @@ const handleDiagnose = async () => {
   color: var(--accent);
   font-size: 13px;
   font-weight: 800;
+}
+
+.input-hint {
+  margin: 0 0 12px;
+  color: var(--text-muted);
+  font-size: 14px;
+  line-height: 1.7;
 }
 
 .stage-actions {

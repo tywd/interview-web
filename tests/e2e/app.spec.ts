@@ -76,6 +76,7 @@ test('mobile sticky action bars are available on long-form pages', async ({ page
 
   await page.goto('/journey/prepare')
   await page.getByPlaceholder('例如：高级前端工程师 / AI 产品前端').fill('移动端测试岗位')
+  await page.getByPlaceholder('建议结构：我是谁 / 我做过什么 / 我为什么适合这个方向').fill('我有前端项目交付经验，做过平台和 AI 相关页面，想投递更匹配的前端岗位。')
   await expect(page.getByTestId('prepare-mobile-review')).toBeVisible()
   await page.getByTestId('prepare-mobile-review').click()
   await expect(page.getByRole('heading', { name: 'AI 优化结果' })).toBeVisible()

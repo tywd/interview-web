@@ -20,6 +20,7 @@
           <p>基于当前简历、JD、公司资料与准备阶段自我介绍生成。</p>
         </div>
         <p v-if="questionPackMetaText" class="ai-meta">{{ questionPackMetaText }}</p>
+        <p v-else-if="questionPackHint" class="input-hint">{{ questionPackHint }}</p>
         <div class="stage-actions">
           <NButton data-testid="interview-generate" type="primary" :loading="generatePending" @click="handleGenerate">
             生成题库
@@ -132,6 +133,21 @@ const reviewMetaText = computed(() => {
     ? '结果来源：DeepSeek'
     : `结果来源：本地回退${reviewMeta.value.fallbackReason ? ` · ${reviewMeta.value.fallbackReason}` : ''}`
 })
+const questionPackHint = computed(() => {
+  const notes: string[] = []
+
+  if (workspace.value.resumeText.trim().length < 100) {
+    notes.push('简历材料偏少')
+  }
+  if (workspace.value.jdText.trim().length < 60) {
+    notes.push('岗位 JD 偏少')
+  }
+  if (preparation.value.selfIntro.trim().length < 20) {
+    notes.push('准备阶段自我介绍偏短')
+  }
+
+  return notes.length ? `建议先：${notes.join(' / ')}` : ''
+})
 
 onMounted(() => {
   load()
@@ -140,6 +156,11 @@ onMounted(() => {
 })
 
 const handleGenerate = async () => {
+  if (workspace.value.resumeText.trim().length < 80 || workspace.value.jdText.trim().length < 60) {
+    message.warning('先补充简历和岗位 JD，再生成更有价值的面试题包')
+    return
+  }
+
   generatePending.value = true
   try {
     const result = await $fetch<InterviewQuestionPackResult>('/api/interview/generate', {
@@ -164,6 +185,11 @@ const handleGenerate = async () => {
 }
 
 const handleReview = async () => {
+  if (draft.askedQuestions.trim().length < 6 || draft.myAnswers.trim().length < 10) {
+    message.warning('至少补充面试题目和回答摘要，再生成复盘建议')
+    return
+  }
+
   reviewPending.value = true
   try {
     const review = await $fetch<InterviewReviewPayload>('/api/interview/review', {
@@ -275,6 +301,13 @@ const handleReview = async () => {
   color: var(--accent);
   font-size: 13px;
   font-weight: 800;
+}
+
+.input-hint {
+  margin: 0 0 12px;
+  color: var(--text-muted);
+  font-size: 14px;
+  line-height: 1.7;
 }
 
 .question-bank,
