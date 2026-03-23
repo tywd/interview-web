@@ -130,6 +130,19 @@ export interface ApplicationRecord {
 
 export interface ApplyState {
   applications: ApplicationRecord[]
+  latestAdvice: ApplyAdvicePayload | null
+  lastAdvisedAt: string | null
+}
+
+export interface ApplyAdviceResult {
+  summary: string
+  prioritizedTargets: string[]
+  followUpActions: string[]
+  risks: string[]
+}
+
+export interface ApplyAdvicePayload extends ApplyAdviceResult {
+  meta?: AiResultMeta
 }
 
 export interface InterviewQuestionCard {

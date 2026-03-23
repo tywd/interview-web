@@ -116,22 +116,10 @@ const categoryMap = {
   business: '业务题',
 } as const
 const questionPackMetaText = computed(() => {
-  if (!questionPackMeta.value) {
-    return ''
-  }
-
-  return questionPackMeta.value.provider === 'deepseek'
-    ? '结果来源：DeepSeek'
-    : `结果来源：本地回退${questionPackMeta.value.fallbackReason ? ` · ${questionPackMeta.value.fallbackReason}` : ''}`
+  return useAiMetaText(questionPackMeta.value)
 })
 const reviewMetaText = computed(() => {
-  if (!reviewMeta.value) {
-    return ''
-  }
-
-  return reviewMeta.value.provider === 'deepseek'
-    ? '结果来源：DeepSeek'
-    : `结果来源：本地回退${reviewMeta.value.fallbackReason ? ` · ${reviewMeta.value.fallbackReason}` : ''}`
+  return useAiMetaText(reviewMeta.value)
 })
 const questionPackHint = computed(() => {
   const notes: string[] = []

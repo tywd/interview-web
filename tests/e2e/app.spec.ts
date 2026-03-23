@@ -39,6 +39,9 @@ test('apply page can create and persist application', async ({ page }) => {
 
   const companyInputs = page.getByPlaceholder('公司')
   await companyInputs.nth(0).fill('测试公司')
+  await page.getByPlaceholder('岗位').nth(0).fill('前端工程师')
+  await page.getByTestId('apply-advise').click()
+  await expect(page.getByText('优先目标')).toBeVisible()
   await page.reload()
   await expect(page.getByPlaceholder('公司').nth(0)).toHaveValue('测试公司')
 })

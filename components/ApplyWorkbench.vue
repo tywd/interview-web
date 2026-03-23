@@ -43,6 +43,7 @@
         <div class="stage-card__head">
           <h2>投递策略提醒</h2>
         </div>
+        <p v-if="adviceMetaText" class="ai-meta">{{ adviceMetaText }}</p>
         <ul class="stage-list">
           <li>优先投递高匹配、高优先级岗位，避免把精力分散在低质量岗位上。</li>
           <li>每条投递都要有明确的下一步动作，例如补发作品集、查看状态、催促内推。</li>
@@ -55,6 +56,28 @@
           <li>最近匹配度：{{ latestScore }}</li>
           <li>进行中任务：{{ workspace.progress.filter((item) => item.status === 'doing').length }}</li>
         </ul>
+
+        <div class="stage-actions">
+          <NButton data-testid="apply-advise" type="primary" :loading="advicePending" @click="handleAdvise">
+            生成投递建议
+          </NButton>
+        </div>
+
+        <div v-if="apply.latestAdvice" class="advice-output">
+          <p>{{ apply.latestAdvice.summary }}</p>
+          <h3>优先目标</h3>
+          <ul class="stage-list">
+            <li v-for="item in apply.latestAdvice.prioritizedTargets" :key="item">{{ item }}</li>
+          </ul>
+          <h3>下一步动作</h3>
+          <ul class="stage-list">
+            <li v-for="item in apply.latestAdvice.followUpActions" :key="item">{{ item }}</li>
+          </ul>
+          <h3>当前风险</h3>
+          <ul class="stage-list">
+            <li v-for="item in apply.latestAdvice.risks" :key="item">{{ item }}</li>
+          </ul>
+        </div>
       </article>
     </section>
 
@@ -66,12 +89,16 @@
 </template>
 
 <script setup lang="ts">
-import { NButton, NInput, NSelect } from 'naive-ui'
+import { NButton, NInput, NSelect, useMessage } from 'naive-ui'
+import type { ApplyAdvicePayload } from '~/types/interview'
 
-const { state, load, persist } = useApplyPlanner()
+const message = useMessage()
+const { state, load, persist, setLatestAdvice } = useApplyPlanner()
 const { state: workspaceState, load: loadWorkspace } = useInterviewTracker()
+const advicePending = ref(false)
 
-const applications = computed(() => state.value.applications)
+const apply = computed(() => state.value)
+const applications = computed(() => apply.value.applications)
 const workspace = computed(() => workspaceState.value)
 const highPriorityCount = computed(() => applications.value.filter((item) => item.priority === 'high').length)
 const interviewCount = computed(() => applications.value.filter((item) => item.status === 'interview').length)
@@ -79,6 +106,7 @@ const latestScore = computed(() => {
   const score = workspace.value.latestReport?.match[0]?.score
   return score ? `${score} 分` : '未分析'
 })
+const adviceMetaText = computed(() => useAiMetaText(apply.value.latestAdvice?.meta))
 
 const statusOptions = [
   { label: '草稿', value: 'draft' },
@@ -115,6 +143,34 @@ const handleAdd = () => {
     notes: '',
   })
   persist()
+}
+
+const handleAdvise = async () => {
+  const validApplications = applications.value.filter((item) => item.company.trim() || item.role.trim())
+  if (!validApplications.length) {
+    message.warning('先录入至少 1 条投递记录，再生成投递建议')
+    return
+  }
+
+  advicePending.value = true
+  try {
+    const result = await $fetch<ApplyAdvicePayload>('/api/apply/advise', {
+      method: 'POST',
+      body: {
+        applications: applications.value,
+        resume: workspace.value.resumeText,
+        jd: workspace.value.jdText,
+        company: workspace.value.companyText,
+      },
+    })
+    setLatestAdvice(result)
+    message.success(result.meta?.provider === 'deepseek' ? '投递建议已生成' : '投递建议已生成，当前为本地回退结果')
+  } catch (error) {
+    console.error(error)
+    message.error('投递建议生成失败')
+  } finally {
+    advicePending.value = false
+  }
 }
 </script>
 
@@ -216,6 +272,32 @@ const handleAdd = () => {
   margin: 0;
   padding-left: 18px;
   line-height: 1.7;
+}
+
+.ai-meta {
+  margin: 0 0 12px;
+  color: var(--accent);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.advice-output {
+  margin-top: 16px;
+  padding: 16px;
+  border: 2px solid var(--border-strong);
+  border-radius: var(--radius-card);
+  background: var(--card-bg);
+  box-shadow: var(--shadow-card);
+}
+
+.advice-output p {
+  margin: 0 0 12px;
+  color: var(--text-muted);
+  line-height: 1.7;
+}
+
+.advice-output h3 {
+  margin: 12px 0 8px;
 }
 
 .mobile-action-bar {

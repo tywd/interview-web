@@ -98,14 +98,7 @@ const workspace = computed(() => workspaceState.value)
 const diagnosis = computed(() => state.value.diagnosis)
 const fallbackKeywordGaps = computed(() => ['Vue 3', 'Nuxt', 'AI', '性能优化'].filter((item) => !workspace.value.resumeText.includes(item)))
 const diagnosisMetaText = computed(() => {
-  const meta = diagnosis.value?.meta
-  if (!meta) {
-    return ''
-  }
-
-  return meta.provider === 'deepseek'
-    ? '结果来源：DeepSeek'
-    : `结果来源：本地回退${meta.fallbackReason ? ` · ${meta.fallbackReason}` : ''}`
+  return useAiMetaText(diagnosis.value?.meta)
 })
 const inputQualityHint = computed(() => {
   const notes: string[] = []

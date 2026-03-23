@@ -169,14 +169,7 @@ const readinessScore = computed(() =>
   Math.round((completedCount.value / Math.max(preparation.value.checklist.length, 1)) * 100),
 )
 const reviewMetaText = computed(() => {
-  const meta = reviewResult.value?.meta
-  if (!meta) {
-    return ''
-  }
-
-  return meta.provider === 'deepseek'
-    ? '结果来源：DeepSeek'
-    : `结果来源：本地回退${meta.fallbackReason ? ` · ${meta.fallbackReason}` : ''}`
+  return useAiMetaText(reviewResult.value?.meta)
 })
 const preparationInputHint = computed(() => {
   const notes: string[] = []

@@ -1,4 +1,4 @@
-import type { ApplicationRecord, ApplyState } from '~/types/interview'
+import type { ApplicationRecord, ApplyAdvicePayload, ApplyState } from '~/types/interview'
 
 const STORAGE_KEY = 'ai-interview-apply'
 
@@ -18,6 +18,8 @@ const defaultApplications = (): ApplicationRecord[] => [
 
 const defaultApplyState = (): ApplyState => ({
   applications: defaultApplications(),
+  latestAdvice: null,
+  lastAdvisedAt: null,
 })
 
 export const useApplyPlanner = () => {
@@ -34,7 +36,11 @@ export const useApplyPlanner = () => {
     }
 
     try {
-      state.value = JSON.parse(raw) as ApplyState
+      const parsed = JSON.parse(raw) as ApplyState
+      state.value = {
+        ...defaultApplyState(),
+        ...parsed,
+      }
     } catch {
       state.value = defaultApplyState()
     }
@@ -47,9 +53,16 @@ export const useApplyPlanner = () => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state.value))
   }
 
+  const setLatestAdvice = (advice: ApplyAdvicePayload) => {
+    state.value.latestAdvice = advice
+    state.value.lastAdvisedAt = new Date().toLocaleString('zh-CN', { hour12: false })
+    persist()
+  }
+
   return {
     state,
     load,
     persist,
+    setLatestAdvice,
   }
 }
