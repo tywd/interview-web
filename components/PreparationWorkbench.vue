@@ -266,7 +266,7 @@ const handleReset = () => {
 .prep-card {
   padding: 24px;
   border-radius: calc(var(--panel-radius) + 4px);
-  box-shadow: 8px 8px 0 rgba(20, 16, 12, 0.9);
+  box-shadow: var(--shadow-panel);
 }
 
 .prep-hero {
@@ -278,8 +278,8 @@ const handleReset = () => {
 .prep-hero__eyebrow {
   display: inline-flex;
   padding: 8px 12px;
-  border: 2px solid rgba(20, 16, 12, 0.9);
-  border-radius: 999px;
+  border: 2px solid var(--border-strong);
+  border-radius: var(--radius-pill);
   background: var(--card-strong-bg);
   font-size: 12px;
   font-weight: 900;
@@ -308,10 +308,10 @@ const handleReset = () => {
   align-content: start;
   gap: 6px;
   padding: 18px;
-  border: 2px solid rgba(20, 16, 12, 0.9);
+  border: 2px solid var(--border-strong);
   border-radius: 20px;
   background: var(--card-bg);
-  box-shadow: 4px 4px 0 rgba(20, 16, 12, 0.9);
+  box-shadow: var(--shadow-card);
 }
 
 .prep-score span {
@@ -376,23 +376,39 @@ const handleReset = () => {
   gap: 12px;
   align-items: center;
   padding: 16px;
-  border: 2px solid rgba(20, 16, 12, 0.9);
+  border: 2px solid var(--border-strong);
   border-radius: 18px;
   background: var(--card-bg);
+  transition:
+    transform var(--transition-fast),
+    background var(--transition-fast),
+    box-shadow var(--transition-fast);
 }
 
 .check-item--done {
   background: var(--card-strong-bg);
+  box-shadow: var(--shadow-card);
+}
+
+.check-item:hover {
+  transform: var(--hover-lift);
 }
 
 .project-note {
   display: grid;
   gap: 10px;
   padding: 16px;
-  border: 2px solid rgba(20, 16, 12, 0.9);
+  border: 2px solid var(--border-strong);
   border-radius: 20px;
   background: var(--card-bg);
-  box-shadow: 4px 4px 0 rgba(20, 16, 12, 0.9);
+  box-shadow: var(--shadow-card);
+  transition:
+    transform var(--transition-fast),
+    box-shadow var(--transition-fast);
+}
+
+.project-note:hover {
+  transform: var(--hover-lift);
 }
 
 .prep-actions {
@@ -409,7 +425,7 @@ const handleReset = () => {
 .ai-output {
   margin-top: 18px;
   padding: 16px;
-  border: 2px solid rgba(20, 16, 12, 0.9);
+  border: 2px solid var(--border-strong);
   border-radius: 18px;
   background: var(--card-bg);
 }

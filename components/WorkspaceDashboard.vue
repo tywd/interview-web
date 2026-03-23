@@ -192,7 +192,7 @@ const saveSnapshot = () => {
   gap: 24px;
   padding: 28px;
   border-radius: calc(var(--panel-radius) + 4px);
-  box-shadow: 8px 8px 0 rgba(20, 16, 12, 0.9);
+  box-shadow: var(--shadow-panel);
 }
 
 .hero__content h1 {
@@ -220,8 +220,8 @@ const saveSnapshot = () => {
 .hero__eyebrow {
   display: inline-flex;
   padding: 8px 12px;
-  border: 2px solid rgba(20, 16, 12, 0.9);
-  border-radius: 999px;
+  border: 2px solid var(--border-strong);
+  border-radius: var(--radius-pill);
   color: var(--accent);
   background: var(--accent-soft);
   font-size: 12px;
@@ -256,7 +256,7 @@ const saveSnapshot = () => {
 .highlights {
   padding: 24px;
   border-radius: var(--panel-radius);
-  box-shadow: 8px 8px 0 rgba(20, 16, 12, 0.9);
+  box-shadow: var(--shadow-panel);
 }
 
 .section-head h2,

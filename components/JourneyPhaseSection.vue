@@ -50,7 +50,7 @@ defineProps<{
   gap: 20px;
   padding: 24px;
   border-radius: calc(var(--panel-radius) + 4px);
-  box-shadow: 8px 8px 0 rgba(20, 16, 12, 0.9);
+  box-shadow: var(--shadow-panel);
 }
 
 .phase-section__head span {
@@ -82,10 +82,17 @@ defineProps<{
 
 .phase-section__block {
   padding: 18px;
-  border: 2px solid rgba(20, 16, 12, 0.9);
+  border: 2px solid var(--border-strong);
   border-radius: 20px;
   background: var(--card-bg);
-  box-shadow: 4px 4px 0 rgba(20, 16, 12, 0.9);
+  box-shadow: var(--shadow-card);
+  transition:
+    transform var(--transition-fast),
+    box-shadow var(--transition-fast);
+}
+
+.phase-section__block:hover {
+  transform: var(--hover-lift);
 }
 
 .phase-section__block h3 {

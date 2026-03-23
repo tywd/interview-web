@@ -133,7 +133,7 @@ const handleDiagnose = async () => {
 .stage-card {
   padding: 24px;
   border-radius: calc(var(--panel-radius) + 4px);
-  box-shadow: 8px 8px 0 rgba(20, 16, 12, 0.9);
+  box-shadow: var(--shadow-panel);
 }
 
 .stage-hero {
@@ -145,8 +145,8 @@ const handleDiagnose = async () => {
 .stage-hero__eyebrow {
   display: inline-flex;
   padding: 8px 12px;
-  border: 2px solid rgba(20, 16, 12, 0.9);
-  border-radius: 999px;
+  border: 2px solid var(--border-strong);
+  border-radius: var(--radius-pill);
   background: var(--card-strong-bg);
   font-size: 12px;
   font-weight: 900;
@@ -171,10 +171,10 @@ const handleDiagnose = async () => {
 
 .stage-score {
   padding: 18px;
-  border: 2px solid rgba(20, 16, 12, 0.9);
+  border: 2px solid var(--border-strong);
   border-radius: 20px;
   background: var(--card-bg);
-  box-shadow: 4px 4px 0 rgba(20, 16, 12, 0.9);
+  box-shadow: var(--shadow-card);
 }
 
 .stage-score strong {

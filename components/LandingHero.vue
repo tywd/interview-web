@@ -48,14 +48,14 @@ import { NButton } from 'naive-ui'
 .landing-hero__panel {
   padding: 28px;
   border-radius: calc(var(--panel-radius) + 6px);
-  box-shadow: 8px 8px 0 rgba(20, 16, 12, 0.9);
+  box-shadow: var(--shadow-panel);
 }
 
 .landing-hero__eyebrow {
   display: inline-flex;
   padding: 8px 12px;
-  border: 2px solid rgba(20, 16, 12, 0.9);
-  border-radius: 999px;
+  border: 2px solid var(--border-strong);
+  border-radius: var(--radius-pill);
   background: var(--card-strong-bg);
   font-size: 12px;
   font-weight: 800;
@@ -95,10 +95,17 @@ import { NButton } from 'naive-ui'
 
 .landing-metric {
   padding: 18px;
-  border: 2px solid rgba(20, 16, 12, 0.9);
+  border: 2px solid var(--border-strong);
   border-radius: 20px;
   background: var(--card-bg);
-  box-shadow: 4px 4px 0 rgba(20, 16, 12, 0.9);
+  box-shadow: var(--shadow-card);
+  transition:
+    transform var(--transition-fast),
+    box-shadow var(--transition-fast);
+}
+
+.landing-metric:hover {
+  transform: var(--hover-lift);
 }
 
 .landing-metric span,
