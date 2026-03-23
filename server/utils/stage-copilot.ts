@@ -19,7 +19,50 @@ const getConfig = () => ({
 
 const hasConfig = () => Boolean(getConfig().apiKey)
 
-const chatJson = async <T>(prompt: string): Promise<T | null> => {
+const safeParseJson = <T>(raw: string): T | null => {
+  const trimmed = raw.trim()
+  const fenced = trimmed.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/i, '')
+  const start = Math.min(
+    ...['{', '[']
+      .map((token) => fenced.indexOf(token))
+      .filter((index) => index >= 0),
+  )
+
+  if (!Number.isFinite(start)) {
+    return null
+  }
+
+  const objectEnd = fenced.lastIndexOf('}')
+  const arrayEnd = fenced.lastIndexOf(']')
+  const end = Math.max(objectEnd, arrayEnd)
+
+  if (end <= start) {
+    return null
+  }
+
+  try {
+    return JSON.parse(fenced.slice(start, end + 1)) as T
+  } catch {
+    return null
+  }
+}
+
+const normalizeText = (value: unknown, fallback = '') => String(value || fallback).trim()
+const normalizeList = (value: unknown, min = 0, max = 6) =>
+  (Array.isArray(value) ? value : [])
+    .map((item) => normalizeText(item))
+    .filter(Boolean)
+    .slice(0, max)
+    .filter((_, index, list) => index < list.length)
+    .slice(0, Math.max(min, 0))
+
+const normalizeBoundedList = (value: unknown, max = 6) =>
+  (Array.isArray(value) ? value : [])
+    .map((item) => normalizeText(item))
+    .filter(Boolean)
+    .slice(0, max)
+
+const chatJson = async <T>(prompt: string, systemPrompt = '你是资深求职顾问。只输出合法 JSON。'): Promise<T | null> => {
   const { apiKey, model } = getConfig()
   if (!apiKey) {
     return null
@@ -42,7 +85,7 @@ const chatJson = async <T>(prompt: string): Promise<T | null> => {
         max_tokens: 2200,
         response_format: { type: 'json_object' },
         messages: [
-          { role: 'system', content: '你是资深求职顾问。只输出合法 JSON。' },
+          { role: 'system', content: systemPrompt },
           { role: 'user', content: prompt },
         ],
       }),
@@ -64,14 +107,117 @@ const chatJson = async <T>(prompt: string): Promise<T | null> => {
 
   const data = await response.json()
   const content = String(data.choices?.[0]?.message?.content || '').trim()
-  try {
-    return JSON.parse(content) as T
-  } catch {
-    return null
-  }
+  return safeParseJson<T>(content)
 }
 
 const countDone = (labels: Array<{ done: boolean }>) => labels.filter((item) => item.done).length
+const INTERVIEW_CATEGORIES: InterviewQuestionCard['category'][] = ['self_intro', 'project', 'technical', 'behavioral', 'business']
+
+const normalizePreparationReview = (value: unknown): PreparationReviewResult | null => {
+  if (!value || typeof value !== 'object') {
+    return null
+  }
+
+  const raw = value as Record<string, unknown>
+  const completionScore = Number.parseInt(String(raw.completionScore ?? ''), 10)
+  const rewrittenProjects = (Array.isArray(raw.rewrittenProjects) ? raw.rewrittenProjects : [])
+    .map((item) => {
+      if (!item || typeof item !== 'object') {
+        return null
+      }
+      const record = item as Record<string, unknown>
+      const title = normalizeText(record.title, '未命名项目')
+      const bullet = normalizeText(record.bullet)
+      return bullet ? { title, bullet } : null
+    })
+    .filter(Boolean) as PreparationReviewResult['rewrittenProjects']
+
+  if (Number.isNaN(completionScore)) {
+    return null
+  }
+
+  return {
+    completionScore: Math.max(0, Math.min(100, completionScore)),
+    missingItems: normalizeBoundedList(raw.missingItems, 6),
+    resumeWarnings: normalizeBoundedList(raw.resumeWarnings, 6),
+    rewrittenProjects,
+    optimizedSelfIntro: normalizeText(raw.optimizedSelfIntro),
+  }
+}
+
+const normalizeMatchDiagnosis = (value: unknown): MatchDiagnosisResult | null => {
+  if (!value || typeof value !== 'object') {
+    return null
+  }
+
+  const raw = value as Record<string, unknown>
+  const overallScore = Number.parseInt(String(raw.overallScore ?? ''), 10)
+
+  if (Number.isNaN(overallScore)) {
+    return null
+  }
+
+  return {
+    overallScore: Math.max(0, Math.min(100, overallScore)),
+    strengths: normalizeBoundedList(raw.strengths, 4),
+    gaps: normalizeBoundedList(raw.gaps, 4),
+    keywordGaps: normalizeBoundedList(raw.keywordGaps, 8),
+    expressionRisks: normalizeBoundedList(raw.expressionRisks, 4),
+    companyQuestions: normalizeBoundedList(raw.companyQuestions, 4),
+    actionPlan: normalizeBoundedList(raw.actionPlan, 4),
+  }
+}
+
+const normalizeQuestionBank = (value: unknown): { questionBank: InterviewQuestionCard[] } | null => {
+  if (!value || typeof value !== 'object') {
+    return null
+  }
+
+  const raw = value as Record<string, unknown>
+  const questionBank = (Array.isArray(raw.questionBank) ? raw.questionBank : [])
+    .map((item) => {
+      if (!item || typeof item !== 'object') {
+        return null
+      }
+      const record = item as Record<string, unknown>
+      const category = normalizeText(record.category) as InterviewQuestionCard['category']
+      const question = normalizeText(record.question)
+      const answerOutline = normalizeText(record.answerOutline)
+
+      if (!INTERVIEW_CATEGORIES.includes(category) || !question || !answerOutline) {
+        return null
+      }
+
+      return {
+        id: normalizeText(record.id) || crypto.randomUUID(),
+        category,
+        question,
+        answerOutline,
+      }
+    })
+    .filter(Boolean) as InterviewQuestionCard[]
+
+  return questionBank.length ? { questionBank: questionBank.slice(0, 5) } : null
+}
+
+const normalizeInterviewReview = (value: unknown): InterviewReviewResult | null => {
+  if (!value || typeof value !== 'object') {
+    return null
+  }
+
+  const raw = value as Record<string, unknown>
+  const summary = normalizeText(raw.summary)
+  if (!summary) {
+    return null
+  }
+
+  return {
+    summary,
+    strengths: normalizeBoundedList(raw.strengths, 4),
+    weaknesses: normalizeBoundedList(raw.weaknesses, 4),
+    nextActions: normalizeBoundedList(raw.nextActions, 4),
+  }
+}
 
 export const reviewPreparation = async (payload: {
   checklist: Array<{ label: string; done: boolean }>
@@ -107,7 +253,9 @@ export const reviewPreparation = async (payload: {
   }
 
   try {
-    const ai = await chatJson<PreparationReviewResult>(`请基于下面的准备阶段信息输出 JSON：
+    const ai = await chatJson<Record<string, unknown>>(`你要扮演求职准备阶段顾问，输出给前端直接渲染的严格 JSON。
+
+JSON 结构：
 {
   "completionScore": 0,
   "missingItems": [""],
@@ -117,14 +265,19 @@ export const reviewPreparation = async (payload: {
 }
 
 要求：
-- rewrittenProjects 每个项目生成 1 条适合放进简历的 bullet。
-- optimizedSelfIntro 输出 100-180 字。
+- completionScore 是 0-100 整数，按材料完整度打分。
+- missingItems 最多 5 条，只写当前最影响投递的缺失项。
+- resumeWarnings 最多 4 条，只写高价值提醒，避免空话。
+- rewrittenProjects 对每个项目生成 1 条中文 bullet，强调业务目标、动作、结果。
+- optimizedSelfIntro 输出 100-180 字，语气克制，突出岗位匹配、项目结果、协作价值。
+- 只输出 JSON，不要解释，不要 markdown。
 
 输入数据：
-${JSON.stringify(payload)}`)
+${JSON.stringify(payload, null, 2)}`, '你是资深求职准备顾问和招聘经理。你的任务是生成可执行、可直接渲染的求职建议。只输出合法 JSON。')
 
-    if (ai) {
-      return ai
+    const normalized = normalizePreparationReview(ai)
+    if (normalized) {
+      return normalized
     }
   } catch (error) {
     console.error('Preparation review fallback to mock.', error)
@@ -187,7 +340,9 @@ export const diagnoseMatch = async (payload: {
   }
 
   try {
-    const ai = await chatJson<MatchDiagnosisResult>(`请基于简历、JD、公司信息输出 JSON：
+    const ai = await chatJson<Record<string, unknown>>(`你要扮演岗位匹配顾问，输出给前端直接渲染的严格 JSON。
+
+JSON 结构：
 {
   "overallScore": 0,
   "strengths": [""],
@@ -197,11 +352,20 @@ export const diagnoseMatch = async (payload: {
   "companyQuestions": [""],
   "actionPlan": [""]
 }
-输入：
-${JSON.stringify(payload)}`)
 
-    if (ai) {
-      return ai
+要求：
+- overallScore 是 0-100 整数。
+- strengths / gaps / expressionRisks / companyQuestions / actionPlan 各输出 3-4 条。
+- keywordGaps 只保留需要显式补进简历或项目表述的关键词。
+- actionPlan 要可执行，按优先级从高到低写。
+- 只输出 JSON，不要解释，不要 markdown。
+
+输入：
+${JSON.stringify(payload, null, 2)}`, '你是资深求职匹配顾问，擅长判断简历、岗位、公司三者之间的真实差距。只输出合法 JSON。')
+
+    const normalized = normalizeMatchDiagnosis(ai)
+    if (normalized) {
+      return normalized
     }
   } catch (error) {
     console.error('Match diagnosis fallback to mock.', error)
@@ -263,22 +427,29 @@ export const generateInterviewPack = async (payload: {
   }
 
   try {
-    const ai = await chatJson<{ questionBank: InterviewQuestionCard[] }>(`请输出面试题包 JSON：
+    const ai = await chatJson<Record<string, unknown>>(`你要扮演技术面试教练，输出严格 JSON 题包。
+
+JSON 结构：
 {
   "questionBank": [
     { "id": "q1", "category": "self_intro", "question": "", "answerOutline": "" }
   ]
 }
+
 要求：
 - 生成 5 道题。
 - category 只能是 self_intro / project / technical / behavioral / business。
-- answerOutline 必须是简洁中文提纲。
+- 5 个 category 尽量各覆盖 1 道，不重复堆在同一类。
+- question 要像真实面试官会问的问题。
+- answerOutline 必须是简洁中文提纲，突出结构和回答重点。
+- 只输出 JSON，不要解释，不要 markdown。
 
 输入：
-${JSON.stringify(payload)}`)
+${JSON.stringify(payload, null, 2)}`, '你是资深技术面试官和求职教练。只输出合法 JSON。')
 
-    if (ai?.questionBank?.length) {
-      return { questionBank: ai.questionBank }
+    const normalized = normalizeQuestionBank(ai)
+    if (normalized) {
+      return normalized
     }
   } catch (error) {
     console.error('Interview pack fallback to mock.', error)
@@ -316,17 +487,27 @@ export const reviewInterviewSession = async (payload: {
   }
 
   try {
-    const ai = await chatJson<InterviewReviewResult>(`请复盘下面这轮面试，输出 JSON：
+    const ai = await chatJson<Record<string, unknown>>(`你要扮演面试复盘教练，输出严格 JSON。
+
+JSON 结构：
 {
   "summary": "",
   "strengths": [""],
   "weaknesses": [""],
   "nextActions": [""]
 }
+
+要求：
+- summary 用 1 段话总结最关键的问题和判断。
+- strengths / weaknesses / nextActions 各输出 3-4 条。
+- nextActions 必须可执行，能直接转成下一轮准备动作。
+- 只输出 JSON，不要解释，不要 markdown。
+
 输入：
-${JSON.stringify(payload)}`)
-    if (ai) {
-      return ai
+${JSON.stringify(payload, null, 2)}`, '你是资深面试复盘教练，善于把面试记录转成下一轮可执行动作。只输出合法 JSON。')
+    const normalized = normalizeInterviewReview(ai)
+    if (normalized) {
+      return normalized
     }
   } catch (error) {
     console.error('Interview review fallback to mock.', error)
