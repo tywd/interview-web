@@ -19,9 +19,19 @@
           <h2>投递记录</h2>
           <p>建议优先记录公司、岗位、状态、下一步动作。</p>
         </div>
+        <p v-if="selectedApplicationLabel" class="input-hint">当前投递对象：{{ selectedApplicationLabel }}</p>
         <ClientOnly fallback-tag="div">
           <div class="application-list">
             <div v-for="item in applications" :key="item.id" class="application-row">
+              <label class="row-select">
+                <input
+                  :checked="apply.selectedApplicationId === item.id"
+                  type="radio"
+                  name="selected-application"
+                  @change="handleSelect(item.id)"
+                >
+                <span>作为当前投递对象</span>
+              </label>
               <NInput v-model:value="item.company" placeholder="公司" />
               <NInput v-model:value="item.role" placeholder="岗位" />
               <NSelect v-model:value="item.status" :options="statusOptions" />
@@ -90,10 +100,10 @@
 
 <script setup lang="ts">
 import { NButton, NInput, NSelect, useMessage } from 'naive-ui'
-import type { ApplyAdvicePayload } from '~/types/interview'
+import type { ApplicationRecord, ApplyAdvicePayload } from '~/types/interview'
 
 const message = useMessage()
-const { state, load, persist, setLatestAdvice } = useApplyPlanner()
+const { state, load, persist, setLatestAdvice, setSelectedApplication } = useApplyPlanner()
 const { state: workspaceState, load: loadWorkspace } = useInterviewTracker()
 const advicePending = ref(false)
 
@@ -107,6 +117,16 @@ const latestScore = computed(() => {
   return score ? `${score} 分` : '未分析'
 })
 const adviceMetaText = computed(() => useAiMetaText(apply.value.latestAdvice?.meta))
+const selectedApplication = computed(() =>
+  applications.value.find((item) => item.id === apply.value.selectedApplicationId) || applications.value[0] || null,
+)
+const selectedApplicationLabel = computed(() => {
+  if (!selectedApplication.value) {
+    return ''
+  }
+
+  return `${selectedApplication.value.company || '未填写公司'} / ${selectedApplication.value.role || '未填写岗位'}`
+})
 
 const statusOptions = [
   { label: '草稿', value: 'draft' },
@@ -128,10 +148,13 @@ watch(applications, () => persist(), { deep: true })
 onMounted(() => {
   load()
   loadWorkspace()
+  if (!apply.value.selectedApplicationId && applications.value[0]?.id) {
+    setSelectedApplication(applications.value[0].id)
+  }
 })
 
 const handleAdd = () => {
-  state.value.applications.unshift({
+  const record: ApplicationRecord = {
     id: crypto.randomUUID(),
     company: '',
     role: '',
@@ -141,8 +164,14 @@ const handleAdd = () => {
     nextAction: '',
     followUpDate: '',
     notes: '',
-  })
+  }
+  state.value.applications.unshift(record)
+  setSelectedApplication(record.id)
   persist()
+}
+
+const handleSelect = (id: string) => {
+  setSelectedApplication(id)
 }
 
 const handleAdvise = async () => {
@@ -161,6 +190,7 @@ const handleAdvise = async () => {
         resume: workspace.value.resumeText,
         jd: workspace.value.jdText,
         company: workspace.value.companyText,
+        selectedApplicationId: apply.value.selectedApplicationId,
       },
     })
     setLatestAdvice(result)
@@ -259,6 +289,22 @@ const handleAdvise = async () => {
 
 .application-row:hover {
   transform: var(--hover-lift);
+}
+
+.row-select {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  color: var(--text-muted);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.input-hint {
+  margin: 0 0 12px;
+  color: var(--text-muted);
+  font-size: 14px;
+  line-height: 1.7;
 }
 
 .stage-actions {

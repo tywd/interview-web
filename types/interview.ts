@@ -132,6 +132,7 @@ export interface ApplyState {
   applications: ApplicationRecord[]
   latestAdvice: ApplyAdvicePayload | null
   lastAdvisedAt: string | null
+  selectedApplicationId: string | null
 }
 
 export interface ApplyAdviceResult {

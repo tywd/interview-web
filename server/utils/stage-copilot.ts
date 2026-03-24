@@ -553,22 +553,26 @@ export const adviseApplications = async (payload: {
   resume: string
   jd: string
   company: string
+  selectedApplicationId?: string | null
 }): Promise<ApplyAdvicePayload> => {
   const activeApplications = payload.applications.filter((item) => item.company.trim() || item.role.trim())
+  const selectedApplication = activeApplications.find((item) => item.id === payload.selectedApplicationId) || activeApplications[0] || null
   const advice: ApplyAdviceResult = {
-    summary: activeApplications.length
+    summary: selectedApplication
+      ? `当前建议优先围绕 ${selectedApplication.company || '目标公司'} 的 ${selectedApplication.role || '目标岗位'} 推进，先把定制化表达、跟进节奏和下一步动作做扎实。`
+      : activeApplications.length
       ? '当前投递阶段应优先聚焦高优先级且已有反馈信号的岗位，同时及时安排下一步跟进动作。'
       : '先录入 1-2 条真实投递记录，再用 AI 生成更有针对性的投递建议。',
-    prioritizedTargets: activeApplications
+    prioritizedTargets: (selectedApplication ? [selectedApplication, ...activeApplications.filter((item) => item.id !== selectedApplication.id)] : activeApplications)
       .slice(0, 3)
       .map((item) => `${item.company || '未填写公司'} - ${item.role || '未填写岗位'}：优先跟进 ${item.nextAction || '补充下一步动作'}`),
     followUpActions: [
-      '优先整理高优先级岗位的定制化简历版本和跟进节奏。',
-      '对已投递超过 2-3 天且无反馈的岗位安排一次主动跟进。',
+      selectedApplication ? `先为 ${selectedApplication.company || '当前目标公司'} 补一版更贴岗的简历摘要或自我介绍。` : '优先整理高优先级岗位的定制化简历版本和跟进节奏。',
+      selectedApplication?.nextAction?.trim() ? `先执行当前记录里的下一步动作：${selectedApplication.nextAction}` : '对已投递超过 2-3 天且无反馈的岗位安排一次主动跟进。',
       '把匹配诊断里的关键词差距补回到下一版简历和项目描述。',
     ],
     risks: [
-      activeApplications.some((item) => !item.nextAction.trim()) ? '部分投递记录没有明确下一步动作，容易造成节奏中断。' : '投递动作记录相对完整，可继续强化节奏管理。',
+      selectedApplication && !selectedApplication.nextAction.trim() ? '当前选中投递记录没有明确下一步动作，容易造成推进中断。' : activeApplications.some((item) => !item.nextAction.trim()) ? '部分投递记录没有明确下一步动作，容易造成节奏中断。' : '投递动作记录相对完整，可继续强化节奏管理。',
       !/\d+[%个项年月人次万]/.test(payload.resume) ? '简历量化结果不足，可能继续影响查看率。' : '简历已有一定量化表达，可继续做岗位定制化优化。',
       payload.company.trim().length < 40 ? '公司资料输入偏少，投递建议对业务语境的贴合度会受影响。' : '公司资料基础已具备，适合继续做更细的定制化投递。',
     ],

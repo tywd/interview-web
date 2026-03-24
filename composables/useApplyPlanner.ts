@@ -20,6 +20,7 @@ const defaultApplyState = (): ApplyState => ({
   applications: defaultApplications(),
   latestAdvice: null,
   lastAdvisedAt: null,
+  selectedApplicationId: null,
 })
 
 export const useApplyPlanner = () => {
@@ -59,10 +60,16 @@ export const useApplyPlanner = () => {
     persist()
   }
 
+  const setSelectedApplication = (id: string | null) => {
+    state.value.selectedApplicationId = id
+    persist()
+  }
+
   return {
     state,
     load,
     persist,
     setLatestAdvice,
+    setSelectedApplication,
   }
 }
