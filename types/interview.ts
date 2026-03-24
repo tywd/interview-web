@@ -140,6 +140,8 @@ export interface ApplyAdviceResult {
   prioritizedTargets: string[]
   followUpActions: string[]
   risks: string[]
+  tailoredResumeSummary: string
+  tailoredSelfIntro: string
 }
 
 export interface ApplyAdvicePayload extends ApplyAdviceResult {

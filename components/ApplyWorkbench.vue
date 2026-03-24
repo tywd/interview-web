@@ -87,6 +87,15 @@
           <ul class="stage-list">
             <li v-for="item in apply.latestAdvice.risks" :key="item">{{ item }}</li>
           </ul>
+          <h3>定制化简历摘要</h3>
+          <p class="asset-copy">{{ apply.latestAdvice.tailoredResumeSummary }}</p>
+          <h3>定制化自我介绍</h3>
+          <p class="asset-copy">{{ apply.latestAdvice.tailoredSelfIntro }}</p>
+          <div class="stage-actions">
+            <NButton data-testid="apply-sync-assets" @click="handleSyncAssets">
+              一键同步到工作台
+            </NButton>
+          </div>
         </div>
       </article>
     </section>
@@ -104,7 +113,7 @@ import type { ApplicationRecord, ApplyAdvicePayload } from '~/types/interview'
 
 const message = useMessage()
 const { state, load, persist, setLatestAdvice, setSelectedApplication } = useApplyPlanner()
-const { state: workspaceState, load: loadWorkspace } = useInterviewTracker()
+const { state: workspaceState, load: loadWorkspace, updateTexts, persist: persistWorkspace } = useInterviewTracker()
 const advicePending = ref(false)
 
 const apply = computed(() => state.value)
@@ -201,6 +210,27 @@ const handleAdvise = async () => {
   } finally {
     advicePending.value = false
   }
+}
+
+const handleSyncAssets = () => {
+  if (!apply.value.latestAdvice) {
+    message.warning('请先生成投递建议')
+    return
+  }
+
+  const syncedResume = [
+    workspace.value.resumeText.trim(),
+    `\n定制化简历摘要\n${apply.value.latestAdvice.tailoredResumeSummary}`,
+    `\n定制化自我介绍\n${apply.value.latestAdvice.tailoredSelfIntro}`,
+  ].filter(Boolean).join('\n\n')
+
+  updateTexts({
+    resumeText: syncedResume,
+    jdText: workspace.value.jdText,
+    companyText: workspace.value.companyText,
+  })
+  persistWorkspace()
+  message.success('定制化投递资产已同步到工作台')
 }
 </script>
 
@@ -344,6 +374,13 @@ const handleAdvise = async () => {
 
 .advice-output h3 {
   margin: 12px 0 8px;
+}
+
+.asset-copy {
+  margin: 0;
+  color: var(--text-muted);
+  line-height: 1.8;
+  white-space: pre-wrap;
 }
 
 .mobile-action-bar {

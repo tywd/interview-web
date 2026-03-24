@@ -248,6 +248,8 @@ const normalizeApplyAdvice = (value: unknown): ApplyAdviceResult | null => {
     prioritizedTargets: normalizeBoundedList(raw.prioritizedTargets, 4),
     followUpActions: normalizeBoundedList(raw.followUpActions, 4),
     risks: normalizeBoundedList(raw.risks, 4),
+    tailoredResumeSummary: normalizeText(raw.tailoredResumeSummary),
+    tailoredSelfIntro: normalizeText(raw.tailoredSelfIntro),
   }
 }
 
@@ -576,6 +578,12 @@ export const adviseApplications = async (payload: {
       !/\d+[%个项年月人次万]/.test(payload.resume) ? '简历量化结果不足，可能继续影响查看率。' : '简历已有一定量化表达，可继续做岗位定制化优化。',
       payload.company.trim().length < 40 ? '公司资料输入偏少，投递建议对业务语境的贴合度会受影响。' : '公司资料基础已具备，适合继续做更细的定制化投递。',
     ],
+    tailoredResumeSummary: selectedApplication
+      ? `${selectedApplication.role || '该岗位'}方向候选人，具备前端工程化、组件抽象与业务交付经验，能够围绕 ${selectedApplication.company || '目标公司'} 的业务场景快速完成页面搭建、体验优化与跨团队协作推进。`
+      : '候选人具备前端交付、工程化与协作推进能力，适合继续围绕高匹配岗位输出更定制化的简历摘要。',
+    tailoredSelfIntro: selectedApplication
+      ? `你好，我过去主要做前端项目交付和复杂页面建设，擅长把业务目标拆成可落地方案。结合 ${selectedApplication.company || '贵公司'} 的 ${selectedApplication.role || '岗位'} 方向，我能更有针对性地贡献在前端工程化、体验优化和跨团队推进上的经验。`
+      : '你好，我有前端项目交付和工程化经验，擅长把业务需求快速落成可上线的页面和交互，也会持续优化性能、协作效率和用户体验。',
   }
 
   if (!hasConfig()) {
@@ -590,7 +598,9 @@ JSON 结构：
   "summary": "",
   "prioritizedTargets": [""],
   "followUpActions": [""],
-  "risks": [""]
+  "risks": [""],
+  "tailoredResumeSummary": "",
+  "tailoredSelfIntro": ""
 }
 
 要求：
@@ -598,6 +608,8 @@ JSON 结构：
 - prioritizedTargets 输出 2-4 条，明确哪个公司/岗位应优先推进以及原因。
 - followUpActions 输出 3-4 条可执行动作。
 - risks 输出 3-4 条最可能拖低查看率或邀约率的风险。
+- tailoredResumeSummary 输出 80-140 字，可直接作为定制化简历摘要。
+- tailoredSelfIntro 输出 80-140 字，可直接作为定制化自我介绍底稿。
 - 只输出 JSON，不要解释，不要 markdown。
 
 输入：
