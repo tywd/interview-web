@@ -19,11 +19,16 @@
           <h2>AI 面试题包</h2>
           <p>基于当前简历、JD、公司资料与准备阶段自我介绍生成。</p>
         </div>
+        <p v-if="selectedTargetLabel" class="input-hint">当前面试目标：{{ selectedTargetLabel }}</p>
+        <p v-if="applyAdviceHint" class="input-hint">{{ applyAdviceHint }}</p>
         <p v-if="questionPackMetaText" class="ai-meta">{{ questionPackMetaText }}</p>
         <p v-else-if="questionPackHint" class="input-hint">{{ questionPackHint }}</p>
         <div class="stage-actions">
           <NButton data-testid="interview-generate" type="primary" :loading="generatePending" @click="handleGenerate">
             生成题库
+          </NButton>
+          <NButton v-if="canApplyTargetAssets" @click="handleApplyTargetAssets">
+            应用投递资产
           </NButton>
           <NButton tag="a" href="/workspace#phase-interview">回工作台看建议</NButton>
         </div>
@@ -91,7 +96,8 @@ import type { AiResultMeta, InterviewQuestionPackResult, InterviewReviewPayload,
 const message = useMessage()
 const { state, load, setQuestionBank, addSession, setLatestReview } = useInterviewCoach()
 const { state: workspaceState, load: loadWorkspace } = useInterviewTracker()
-const { state: preparationState, load: loadPreparation } = usePreparationPlanner()
+const { state: preparationState, load: loadPreparation, persist: persistPreparation } = usePreparationPlanner()
+const { state: applyState, load: loadApply } = useApplyPlanner()
 const generatePending = ref(false)
 const reviewPending = ref(false)
 const questionPackMeta = ref<AiResultMeta | null>(null)
@@ -100,6 +106,7 @@ const reviewMeta = ref<AiResultMeta | null>(null)
 const interview = computed(() => state.value)
 const workspace = computed(() => workspaceState.value)
 const preparation = computed(() => preparationState.value)
+const apply = computed(() => applyState.value)
 const draft = reactive({
   company: '',
   round: '',
@@ -121,6 +128,24 @@ const questionPackMetaText = computed(() => {
 const reviewMetaText = computed(() => {
   return useAiMetaText(reviewMeta.value)
 })
+const selectedApplication = computed(() =>
+  apply.value.applications.find((item) => item.id === apply.value.selectedApplicationId) || apply.value.applications[0] || null,
+)
+const selectedTargetLabel = computed(() => {
+  if (!selectedApplication.value) {
+    return ''
+  }
+
+  return `${selectedApplication.value.company || '未填写公司'} / ${selectedApplication.value.role || '未填写岗位'}`
+})
+const applyAdviceHint = computed(() => {
+  if (!apply.value.latestAdvice?.tailoredSelfIntro) {
+    return ''
+  }
+
+  return '将优先使用投递阶段生成的定制化自我介绍与当前投递对象生成题包。'
+})
+const canApplyTargetAssets = computed(() => Boolean(selectedApplication.value || apply.value.latestAdvice?.tailoredSelfIntro))
 const questionPackHint = computed(() => {
   const notes: string[] = []
 
@@ -141,7 +166,27 @@ onMounted(() => {
   load()
   loadWorkspace()
   loadPreparation()
+  loadApply()
 })
+
+watch(selectedApplication, (value) => {
+  if (!draft.company && value?.company) {
+    draft.company = value.company
+  }
+}, { immediate: true })
+
+const handleApplyTargetAssets = () => {
+  if (selectedApplication.value?.company) {
+    draft.company = selectedApplication.value.company
+  }
+
+  if (apply.value.latestAdvice?.tailoredSelfIntro) {
+    preparation.value.selfIntro = apply.value.latestAdvice.tailoredSelfIntro
+    persistPreparation()
+  }
+
+  message.success('已应用当前投递对象和定制化自我介绍')
+}
 
 const handleGenerate = async () => {
   if (workspace.value.resumeText.trim().length < 80 || workspace.value.jdText.trim().length < 60) {
@@ -156,9 +201,16 @@ const handleGenerate = async () => {
       body: {
         resume: workspace.value.resumeText,
         jd: workspace.value.jdText,
-        company: workspace.value.companyText,
-        selfIntro: preparation.value.selfIntro,
-        projectHighlights: preparation.value.projectNotes.map((item) => item.title).filter(Boolean),
+        company: [
+          selectedApplication.value?.company && `目标公司：${selectedApplication.value.company}`,
+          selectedApplication.value?.role && `目标岗位：${selectedApplication.value.role}`,
+          workspace.value.companyText,
+        ].filter(Boolean).join('\n'),
+        selfIntro: apply.value.latestAdvice?.tailoredSelfIntro || preparation.value.selfIntro,
+        projectHighlights: [
+          selectedApplication.value?.role || '',
+          ...preparation.value.projectNotes.map((item) => item.title).filter(Boolean),
+        ].filter(Boolean),
       },
     })
     setQuestionBank(result.questionBank)

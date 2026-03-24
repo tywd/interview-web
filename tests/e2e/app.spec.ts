@@ -47,6 +47,8 @@ test('apply page can create and persist application', async ({ page }) => {
   await page.getByTestId('apply-sync-assets').click()
   await page.goto('/workspace')
   await expect(page.locator('textarea').first()).toHaveValue(/定制化简历摘要/)
+  await page.goto('/journey/interview')
+  await expect(page.getByText('当前面试目标：测试公司 / 前端工程师')).toBeVisible()
   await page.reload()
   await page.goto('/journey/apply')
   await expect(page.getByPlaceholder('公司').nth(0)).toHaveValue('测试公司')
